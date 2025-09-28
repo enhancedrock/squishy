@@ -1,0 +1,63 @@
+bot:
+  # Your bot's token from the Discord Developer Portal
+  bot-token: CHANGEME
+  # The ID of the server you plan to use Squishy in (she'll leave any others)
+  server-id: 0000000000000000000
+  # The prefix for all commands (e.g. s.help)
+  prefix: s.
+  status:
+    # Interval to rotate status in seconds
+    interval: 30
+    # How your bot should appear
+    # 0 = Online, 1 = Idle, 2 = Do Not Disturb, 3 = Invisible
+    online-type: 0
+    # "Watching X channels"
+    channel-count: true
+    # "Watching X members"
+    member-count: true
+    # "Watching X roles"
+    role-count: true
+    # "Watching github.com/enhancedrock/squishy"
+    repo: true
+    custom:
+      enabled: false
+      # Custom status to add to the rotation
+      custom: with fire
+      # Type of status to use
+      # 0 = Playing, 1 = Watching, 2 = Listening, 3 = Standard (No Playing/Watching/Listening)
+      custom-type: 0
+  embed-colours:
+    # The colour of embeds the bot sends (in hex)
+    default: 0x7600bc
+    # The colour of error embeds
+    error: 0x8b0000
+    # The colour of success embeds
+    success: 0x03ac13
+    # The colour of warning embeds
+    warning: 0xffdb58
+    # The colour of in-progress/confirmation embeds
+    info: 0xffdb58
+
+dashboard:
+  # Whether or not to enable the web dashboard for configuring the bot
+  enabled: true
+  # What port the dashboard should run on
+  port: 6942
+  # The URL the dashboard will be hosted on (like 127.0.0.1)
+  url: 127.0.0.1
+  # Dashboard password
+  password: squishable
+  # If modules can be installed via the dashboard
+  allow-module-install: true
+  # If repos can be added via the dashboard
+  allow-repo-add: true
+  # If the main config can be edited via the dashboard
+  allow-config-edit: false
+
+modules:
+  # The additional repos to pull modules from
+  repos:
+    -
+  # Enabled modules
+  enabled:
+    -

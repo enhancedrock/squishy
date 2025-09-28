@@ -1,10 +1,9 @@
 # User-data
-config.json
-userdata.db
+config.yml
 assets/*
-customs/postmain/*
-customs/premain/*
-customs/scripts/*
+config/*
+data/*
+modules/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
