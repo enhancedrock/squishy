@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
+    
+    <!-- CodeMirror CSS and JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .topbar {
+            width: 100%;
+            height: 7.5vh;
+            background-color: #313244;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding: 0 2vw;
+            border-bottom: 2px solid #45475a;
+        }
+        .topbar h1, .topbar p {
+            margin: 0;
+            padding: 0;
+            max-width: 100%;
+            max-height: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .topbar p {
+            order: 1;
+            text-align: right;
+            font-family: 'Lexend', sans-serif;
+            color: #a6adc8;
+        }
+        .topbar h1 {
+            order: 0;
+            font-family: 'Lexend', sans-serif;
+            color: #cdd6f4;
+        }
+    </style>
+    <title>Squishy Dashboard</title>
+</head>
+<body>
+    <div class="topbar">
+        <h1>Squishy Configurator</h1>
+        <p>loading</p>
+    </div>
+    <div style="display: flex; height: 92.5vh;">
+        <div style="width: 20vw; height: 100%; background-color: #1e1e2e; box-sizing: border-box; border-right: 2px solid #45475a;">
+            <!-- Left bar content goes here -->
+        </div>
+        <div style="width: 80vw; height: 100%; background-color: #181825; box-sizing: border-box; padding: 20px;">
+            <div style="display: flex; flex-direction: column; height: 100%;">
+                <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="color: #cdd6f4; font-family: 'Lexend', sans-serif; margin: 0;" id="config-title">Select a config</h2>
+                    <button id="save-btn" style="
+                        padding: 10px 20px;
+                        background: #313244;
+                        color: #cdd6f4;
+                        border: none;
+                        border-radius: 5px;
+                        font-family: 'Lexend', sans-serif;
+                        cursor: pointer;
+                        display: none;
+                    ">Save Config</button>
+                </div>
+                <div id="config-editor" style="
+                    flex: 1;
+                    border: 2px solid #45475a;
+                    border-radius: 5px;
+                    overflow: hidden;
+                "></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentConfigName = null;
+        let editor = null;
+        
+        // Initialize CodeMirror editor
+        document.addEventListener('DOMContentLoaded', function() {
+            editor = CodeMirror(document.getElementById('config-editor'), {
+                mode: 'yaml',
+                theme: 'material-darker',
+                lineNumbers: true,
+                indentUnit: 2,
+                tabSize: 2,
+                indentWithTabs: false,
+                lineWrapping: true,
+                extraKeys: {
+                    "Tab": function(cm) {
+                        if (cm.somethingSelected()) {
+                            cm.indentSelection("add");
+                        } else {
+                            cm.replaceSelection("  "); // Insert 2 spaces for YAML
+                        }
+                    },
+                    "Shift-Tab": function(cm) {
+                        cm.indentSelection("subtract");
+                    }
+                },
+                placeholder: "Select a config file to edit...",
+                styleActiveLine: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"]
+            });
+            
+            // Set custom styling to match your theme
+            editor.getWrapperElement().style.height = '100%';
+            editor.getWrapperElement().style.fontSize = '14px';
+            editor.refresh();
+        });
+        
+        // Fetch both configs and market status
+        Promise.all([
+            fetch('/configs').then(response => response.json()),
+            fetch('/marketenabled').then(response => response.json())
+        ])
+            .then(([configsData, marketData]) => {
+                const leftBar = document.querySelector('div[style*="width: 20vw"]');
+                
+                // Function to create a button
+                function createButton(name, isMarket = false) {
+                    const btn = document.createElement('button');
+                    btn.textContent = name;
+                    btn.style.display = 'block';
+                    btn.style.width = '90%';
+                    btn.style.margin = '10px auto';
+                    btn.style.padding = '10px';
+                    btn.style.background = '#313244';
+                    btn.style.color = '#cdd6f4';
+                    btn.style.border = 'none';
+                    btn.style.borderRadius = '5px';
+                    btn.style.fontFamily = "'Lexend', sans-serif";
+                    btn.style.cursor = 'pointer';
+                    
+                    if (isMarket) {
+                        // Market button redirects to /market
+                        btn.addEventListener('click', () => {
+                            window.location.href = '/market';
+                        });
+                    } else {
+                        // Config buttons load config data
+                        btn.addEventListener('click', () => {
+                            currentConfigName = name;
+                            document.querySelector('.topbar p').textContent = 'loading ' + name;
+                            document.getElementById('config-title').textContent = name;
+                            
+                            fetch('/getconfig', {
+                                method: 'GET',
+                                headers: {
+                                    'config': name
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(configData => {
+                                if (configData.error) {
+                                    editor.setValue('# Error: ' + configData.error);
+                                    editor.setOption('readOnly', true);
+                                    document.getElementById('save-btn').style.display = 'none';
+                                } else {
+                                    editor.setValue(configData.config);
+                                    editor.setOption('readOnly', false);
+                                    document.getElementById('save-btn').style.display = 'block';
+                                }
+                                document.querySelector('.topbar p').textContent = 'idle';
+                            })
+                            .catch(error => {
+                                console.error('Error fetching config:', error);
+                                editor.setValue('# Error loading config: ' + error.message);
+                                editor.setOption('readOnly', true);
+                                document.getElementById('save-btn').style.display = 'none';
+                                document.querySelector('.topbar p').textContent = 'error';
+                            });
+                        });
+                    }
+                    
+                    return btn;
+                }
+                
+                // Function to create a separator
+                function createSeparator() {
+                    const separator = document.createElement('div');
+                    separator.style.width = '80%';
+                    separator.style.height = '1px';
+                    separator.style.background = '#45475a';
+                    separator.style.margin = '15px auto';
+                    return separator;
+                }
+                
+                // Sort configs: Main Bot Config first, then others
+                const mainBotConfig = configsData.configs.find(name => name === 'Main Bot Config');
+                const otherConfigs = configsData.configs.filter(name => name !== 'Main Bot Config');
+                
+                // Track if we have any buttons above the separator
+                let hasButtonsAboveSeparator = false;
+                
+                // Add Market button first if enabled
+                if (marketData.enabled) {
+                    leftBar.appendChild(createButton('Market', true));
+                    hasButtonsAboveSeparator = true;
+                }
+                
+                // Add Main Bot Config second if it exists
+                if (mainBotConfig) {
+                    leftBar.appendChild(createButton(mainBotConfig));
+                    hasButtonsAboveSeparator = true;
+                }
+                
+                // Add separator if we have buttons above it and other configs below
+                if (hasButtonsAboveSeparator && otherConfigs.length > 0) {
+                    leftBar.appendChild(createSeparator());
+                }
+                
+                // Add other configs
+                otherConfigs.forEach(name => {
+                    leftBar.appendChild(createButton(name));
+                });
+            })
+            .then(() => {
+                document.querySelector('.topbar p').textContent = 'idle';
+            });
+        
+        // Save button functionality
+        document.getElementById('save-btn').addEventListener('click', () => {
+            if (!currentConfigName) {
+                alert('No config selected');
+                return;
+            }
+            
+            const yamlContent = editor.getValue();
+            document.querySelector('.topbar p').textContent = 'saving ' + currentConfigName;
+            
+            fetch('/saveconfig', {
+                method: 'POST',
+                headers: {
+                    'config': currentConfigName,
+                    'Content-Type': 'text/plain'
+                },
+                body: yamlContent
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    document.querySelector('.topbar p').textContent = 'saved';
+                    setTimeout(() => {
+                        document.querySelector('.topbar p').textContent = 'idle';
+                    }, 2000);
+                } else {
+                    alert('Error saving config: ' + result.error);
+                    document.querySelector('.topbar p').textContent = 'error';
+                }
+            })
+            .catch(error => {
+                console.error('Error saving config:', error);
+                alert('Error saving config: ' + error.message);
+                document.querySelector('.topbar p').textContent = 'error';
+            });
+        });
+    </script>
+</html>

@@ -2,3 +2,4 @@ discord.py
 requests
 pyyaml
 psutil
+Flask

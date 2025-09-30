@@ -44,7 +44,7 @@ dashboard:
   # What port the dashboard should run on
   port: 6942
   # The URL the dashboard will be hosted on (like 127.0.0.1)
-  url: 127.0.0.1
+  host: 127.0.0.1
   # Dashboard password
   password: squishable
   # If modules can be installed via the dashboard

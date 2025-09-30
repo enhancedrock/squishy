@@ -517,17 +517,350 @@ async def on_message(message):
     # Process commands after handling mentions
     await squishy.process_commands(message)
 
-@squishy.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
+@squishy.command(brief="List available modules from repositories")
+async def modules(ctx, repo_id: int = 0):
+    """List all available modules from a specific repository"""
+    try:
+        import market
+        modules_list = market.list_available_modules(repo_id)
+        
+        if not modules_list:
+            embed = discord.Embed(
+                title="No Modules Found",
+                description=f"No modules found in repository {repo_id}",
+                color=squishy.warning_embed_color
+            )
+            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+            await ctx.reply(embed=embed)
+            return
+        
+        # Create pages of modules (5 per page)
+        pages = []
+        for i in range(0, len(modules_list), 5):
+            page_modules = modules_list[i:i+5]
+            embed = discord.Embed(
+                title=f"Available Modules (Page {len(pages)+1})",
+                description=f"Repository {repo_id}",
+                color=squishy.default_embed_color
+            )
+            
+            for module in page_modules:
+                name = module.get('name', 'Unknown')
+                version = module.get('version', 'Unknown')
+                author = module.get('author', 'Unknown')
+                description = module.get('description', 'No description available')
+                
+                # Check if installed
+                installed = market.is_module_installed(module.get('source', ''))
+                status = "✅ Installed" if installed else "⬇️ Available"
+                
+                embed.add_field(
+                    name=f"{name} v{version} {status}",
+                    value=f"**Author:** {author}\n**Description:** {description[:100]}{'...' if len(description) > 100 else ''}",
+                    inline=False
+                )
+            
+            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+            pages.append(embed)
+        
+        if len(pages) == 1:
+            await ctx.reply(embed=pages[0])
+        else:
+            # TODO: Add pagination view for multiple pages
+            await ctx.reply(embed=pages[0])
+            
+    except Exception as e:
         embed = discord.Embed(
-            title="*gulp*",
-            description=f"That command does not exist. Use `{config['bot']['prefix']}help` to see available commands.",
+            title="Error",
+            description=f"Failed to fetch modules: {str(e)}",
             color=squishy.error_embed_color
         )
         embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
         await ctx.reply(embed=embed)
+
+@squishy.command(brief="Install a module by name")
+async def install(ctx, *, module_name: str):
+    """Install a module by its name from the default repository"""
+    try:
+        import market
+        
+        # Check if user has permission (you can customize this)
+        if not ctx.author.guild_permissions.administrator:
+            embed = discord.Embed(
+                title="Permission Denied",
+                description="You need administrator permissions to install modules.",
+                color=squishy.error_embed_color
+            )
+            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+            await ctx.reply(embed=embed)
+            return
+        
+        # Send initial message
+        embed = discord.Embed(
+            title="Installing Module",
+            description=f"Installing `{module_name}`...",
+            color=squishy.info_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        message = await ctx.reply(embed=embed)
+        
+        # Try to install
+        success = market.install_module_by_name(module_name)
+        
+        if success:
+            embed = discord.Embed(
+                title="Module Installed",
+                description=f"Successfully installed `{module_name}`!\n\n⚠️ **Restart the bot** to load the new module.",
+                color=squishy.success_embed_color
+            )
+        else:
+            embed = discord.Embed(
+                title="Installation Failed",
+                description=f"Failed to install `{module_name}`. Check if the module name is correct and if it's already installed.",
+                color=squishy.error_embed_color
+            )
+        
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await message.edit(embed=embed)
+        
+    except Exception as e:
+        embed = discord.Embed(
+            title="Error",
+            description=f"An error occurred: {str(e)}",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+
+@squishy.command(brief="Update all installed modules")
+async def updatemodules(ctx):
+    """Update all installed modules that have available updates"""
+    try:
+        import market
+        
+        # Check if user has permission
+        if not ctx.author.guild_permissions.administrator:
+            embed = discord.Embed(
+                title="Permission Denied",
+                description="You need administrator permissions to update modules.",
+                color=squishy.error_embed_color
+            )
+            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+            await ctx.reply(embed=embed)
+            return
+        
+        # Send initial message
+        embed = discord.Embed(
+            title="Updating Modules",
+            description="Checking for updates...",
+            color=squishy.info_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        message = await ctx.reply(embed=embed)
+        
+        # Update all modules
+        results = market.update_all_modules()
+        
+        if not results:
+            embed = discord.Embed(
+                title="No Updates Available",
+                description="All installed modules are up to date!",
+                color=squishy.success_embed_color
+            )
+        else:
+            updated = [name for name, success in results.items() if success]
+            failed = [name for name, success in results.items() if not success]
+            
+            description = ""
+            if updated:
+                description += f"**Successfully Updated ({len(updated)}):**\n"
+                description += "\n".join([f"✅ {name}" for name in updated])
+            
+            if failed:
+                if description:
+                    description += "\n\n"
+                description += f"**Failed to Update ({len(failed)}):**\n"
+                description += "\n".join([f"❌ {name}" for name in failed])
+            
+            if updated:
+                description += "\n\n⚠️ **Restart the bot** to load the updated modules."
+            
+            color = squishy.success_embed_color if not failed else squishy.warning_embed_color
+            embed = discord.Embed(
+                title="Module Updates Complete",
+                description=description,
+                color=color
+            )
+        
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await message.edit(embed=embed)
+        
+    except Exception as e:
+        embed = discord.Embed(
+            title="Error",
+            description=f"An error occurred: {str(e)}",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+
+@squishy.command(brief="Show installed modules")
+async def installed(ctx):
+    """Show all currently installed modules"""
+    try:
+        import market
+        
+        installed_modules = market.get_installed_modules()
+        
+        if not installed_modules:
+            embed = discord.Embed(
+                title="No Modules Installed",
+                description="No modules are currently installed.",
+                color=squishy.info_embed_color
+            )
+            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+            await ctx.reply(embed=embed)
+            return
+        
+        embed = discord.Embed(
+            title=f"Installed Modules ({len(installed_modules)})",
+            color=squishy.default_embed_color
+        )
+        
+        for module_name, module_info in installed_modules.items():
+            name = module_info.get('name', module_name)
+            version = module_info.get('version', 'Unknown')
+            author = module_info.get('author', 'Unknown')
+            description = module_info.get('description', 'No description available')
+            
+            # Check if update available
+            if module_info.get('source'):
+                repo_module = market.find_module_in_repos(module_info['source'])
+                if repo_module:
+                    can_update, current_ver, new_ver = market.can_module_be_updated(repo_module)
+                    status = f"🔄 Update to {new_ver}" if can_update else "✅ Up to date"
+                else:
+                    status = "❓ Not in repos"
+            else:
+                status = "🔒 Local only"
+            
+            embed.add_field(
+                name=f"{name} v{version} {status}",
+                value=f"**Author:** {author}\n**Description:** {description[:100]}{'...' if len(description) > 100 else ''}",
+                inline=False
+            )
+        
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+        
+    except Exception as e:
+        embed = discord.Embed(
+            title="Error",
+            description=f"An error occurred: {str(e)}",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+
+@squishy.command(brief="Uninstall a module")
+async def uninstall(ctx, *, module_name: str):
+    """Uninstall a module by its name"""
+    try:
+        import market
+        
+        # Check if user has permission
+        if not ctx.author.guild_permissions.administrator:
+            embed = discord.Embed(
+                title="Permission Denied",
+                description="You need administrator permissions to uninstall modules.",
+                color=squishy.error_embed_color
+            )
+            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+            await ctx.reply(embed=embed)
+            return
+        
+        # Find the module by name
+        installed_modules = market.get_installed_modules()
+        target_module = None
+        
+        for module_info in installed_modules.values():
+            if module_info.get('name', '').lower() == module_name.lower():
+                target_module = module_info
+                break
+        
+        if not target_module:
+            embed = discord.Embed(
+                title="Module Not Found",
+                description=f"No installed module named `{module_name}` found.",
+                color=squishy.error_embed_color
+            )
+            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+            await ctx.reply(embed=embed)
+            return
+        
+        # Send initial message
+        embed = discord.Embed(
+            title="Uninstalling Module",
+            description=f"Uninstalling `{module_name}`...",
+            color=squishy.info_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        message = await ctx.reply(embed=embed)
+        
+        # Uninstall the module
+        source_url = target_module.get('source', '')
+        success = market.uninstall_module(source_url) if source_url else False
+        
+        if not source_url:
+            # Manual removal for modules without source
+            try:
+                import os
+                module_path = os.path.join('modules', target_module['filename'])
+                os.remove(module_path)
+                success = True
+            except Exception:
+                success = False
+        
+        if success:
+            embed = discord.Embed(
+                title="Module Uninstalled",
+                description=f"Successfully uninstalled `{module_name}`!\n\n⚠️ **Restart the bot** to complete removal.",
+                color=squishy.success_embed_color
+            )
+        else:
+            embed = discord.Embed(
+                title="Uninstallation Failed",
+                description=f"Failed to uninstall `{module_name}`.",
+                color=squishy.error_embed_color
+            )
+        
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await message.edit(embed=embed)
+        
+    except Exception as e:
+        embed = discord.Embed(
+            title="Error",
+            description=f"An error occurred: {str(e)}",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+
+@squishy.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        return
     else:
-        raise error
+        logger.error(f"Command error in {ctx.command}: {error}")
+        embed = discord.Embed(
+            title="Error",
+            description=f"An error occurred while executing the command: {str(error)}",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        try:
+            await ctx.reply(embed=embed)
+        except:
+            pass
 
 squishy.run(config['bot']['bot-token'], log_handler=None)

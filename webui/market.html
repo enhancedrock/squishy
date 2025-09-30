@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #181825;
+            font-family: 'Lexend', sans-serif;
+            color: #cdd6f4;
+        }
+        
+        .topbar {
+            width: 100%;
+            height: 7.5vh;
+            background-color: #313244;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding: 0 2vw;
+            border-bottom: 2px solid #45475a;
+        }
+        
+        .topbar h1 {
+            margin: 0;
+            padding: 0;
+            font-family: 'Lexend', sans-serif;
+            color: #cdd6f4;
+        }
+        
+        .topbar .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .topbar p {
+            margin: 0;
+            padding: 0;
+            font-family: 'Lexend', sans-serif;
+            color: #a6adc8;
+        }
+        
+        .back-btn {
+            padding: 8px 16px;
+            background: #45475a;
+            color: #cdd6f4;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Lexend', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .back-btn:hover {
+            background: #585b70;
+        }
+        
+        .main-container {
+            display: flex;
+            height: 92.5vh;
+        }
+        
+        .sidebar {
+            width: 20vw;
+            height: 100%;
+            background-color: #1e1e2e;
+            box-sizing: border-box;
+            border-right: 2px solid #45475a;
+            padding: 20px;
+        }
+        
+        .content {
+            width: 80vw;
+            height: 100%;
+            background-color: #181825;
+            box-sizing: border-box;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .repo-selector {
+            margin-bottom: 20px;
+        }
+        
+        .repo-selector label {
+            display: block;
+            margin-bottom: 5px;
+            color: #cdd6f4;
+            font-weight: bold;
+        }
+        
+        .repo-selector select {
+            width: 100%;
+            padding: 10px;
+            background: #313244;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            border-radius: 5px;
+            font-family: 'Lexend', sans-serif;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        
+        .filter-section h3 {
+            margin-bottom: 10px;
+            color: #cdd6f4;
+        }
+        
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .filter-checkbox input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .filter-checkbox label {
+            color: #a6adc8;
+            cursor: pointer;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            background: #313244;
+            color: #cdd6f4;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Lexend', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background: #45475a;
+        }
+        
+        .btn:disabled {
+            background: #585b70;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .btn.primary {
+            background: #89b4fa;
+            color: #181825;
+        }
+        
+        .btn.primary:hover {
+            background: #74c7ec;
+        }
+        
+        .btn.danger {
+            background: #f38ba8;
+            color: #181825;
+        }
+        
+        .btn.danger:hover {
+            background: #eba0ac;
+        }
+        
+        .btn.success {
+            background: #a6e3a1;
+            color: #181825;
+        }
+        
+        .btn.success:hover {
+            background: #94e2d5;
+        }
+        
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .module-card {
+            background: #313244;
+            border: 2px solid #45475a;
+            border-radius: 8px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+        
+        .module-card:hover {
+            border-color: #585b70;
+        }
+        
+        .module-card.installed {
+            border-color: #a6e3a1;
+        }
+        
+        .module-card.update-available {
+            border-color: #f9e2af;
+        }
+        
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .module-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #cdd6f4;
+            margin: 0;
+        }
+        
+        .module-version {
+            background: #45475a;
+            color: #a6adc8;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        
+        .module-author {
+            color: #a6adc8;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .module-description {
+            color: #cdd6f4;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .module-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .status-icon.available {
+            background-color: #6c7086;
+        }
+        
+        .status-icon.installed {
+            background-color: #a6e3a1;
+        }
+        
+        .status-icon.update-available {
+            background-color: #f9e2af;
+        }
+        
+        .status-text {
+            font-size: 0.9em;
+            color: #a6adc8;
+        }
+        
+        .module-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .module-actions .btn {
+            padding: 6px 12px;
+            font-size: 0.9em;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #a6adc8;
+        }
+        
+        .error {
+            background: #f38ba8;
+            color: #181825;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #a6e3a1;
+            color: #181825;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .dependencies {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #45475a;
+        }
+        
+        .dependencies-title {
+            font-size: 0.8em;
+            color: #a6adc8;
+            margin-bottom: 5px;
+        }
+        
+        .dependency-item {
+            font-size: 0.8em;
+            color: #6c7086;
+            margin-left: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .modal-content {
+            background-color: #313244;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            border: 2px solid #45475a;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-title {
+            color: #cdd6f4;
+            margin: 0;
+        }
+        
+        .close {
+            color: #a6adc8;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #cdd6f4;
+        }
+        
+        .modal-body {
+            color: #cdd6f4;
+            margin-bottom: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 2px solid #45475a;
+            }
+            
+            .content {
+                width: 100%;
+            }
+            
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <title>Squishy Module Market</title>
+</head>
+<body>
+    <div class="topbar">
+        <h1>Module Market</h1>
+        <div class="actions">
+            <a href="/" class="back-btn">← Back to Dashboard</a>
+            <p id="status">loading</p>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="repo-selector">
+                <label for="repo-select">Repository:</label>
+                <select id="repo-select">
+                    <option value="0">Loading...</option>
+                </select>
+            </div>
+            
+            <div class="filter-section">
+                <h3>Filters</h3>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="show-installed" checked>
+                    <label for="show-installed">Show Installed</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="show-available" checked>
+                    <label for="show-available">Show Available</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="show-updates" checked>
+                    <label for="show-updates">Show Updates</label>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="refresh-btn" class="btn">Refresh</button>
+                <button id="update-all-btn" class="btn success">Update All</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div id="message-container"></div>
+            <div id="loading" class="loading">Loading modules...</div>
+            <div id="module-container" class="module-grid" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Confirm Action</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-actions">
+                <button id="modal-cancel" class="btn">Cancel</button>
+                <button id="modal-confirm" class="btn primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentRepoId = 0;
+        let availableModules = [];
+        let installedModules = {};
+        let repos = [];
+        
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const loadingEl = document.getElementById('loading');
+        const moduleContainer = document.getElementById('module-container');
+        const messageContainer = document.getElementById('message-container');
+        const repoSelect = document.getElementById('repo-select');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const updateAllBtn = document.getElementById('update-all-btn');
+        
+        // Filter checkboxes
+        const showInstalledCheck = document.getElementById('show-installed');
+        const showAvailableCheck = document.getElementById('show-available');
+        const showUpdatesCheck = document.getElementById('show-updates');
+        
+        // Modal elements
+        const modal = document.getElementById('confirmation-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalConfirm = document.getElementById('modal-confirm');
+        const modalCancel = document.getElementById('modal-cancel');
+        const closeModal = document.querySelector('.close');
+        
+        let pendingAction = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRepos();
+            
+            // Event listeners
+            repoSelect.addEventListener('change', function() {
+                currentRepoId = parseInt(this.value);
+                loadModules();
+            });
+            
+            refreshBtn.addEventListener('click', loadModules);
+            updateAllBtn.addEventListener('click', updateAllModules);
+            
+            // Filter event listeners
+            showInstalledCheck.addEventListener('change', filterModules);
+            showAvailableCheck.addEventListener('change', filterModules);
+            showUpdatesCheck.addEventListener('change', filterModules);
+            
+            // Modal event listeners
+            closeModal.addEventListener('click', hideModal);
+            modalCancel.addEventListener('click', hideModal);
+            modalConfirm.addEventListener('click', function() {
+                if (pendingAction) {
+                    pendingAction();
+                    pendingAction = null;
+                }
+                hideModal();
+            });
+            
+            // Click outside modal to close
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    hideModal();
+                }
+            });
+        });
+        
+        function setStatus(text) {
+            statusEl.textContent = text;
+        }
+        
+        function showMessage(message, type = 'error') {
+            const messageEl = document.createElement('div');
+            messageEl.className = type;
+            messageEl.textContent = message;
+            messageContainer.innerHTML = '';
+            messageContainer.appendChild(messageEl);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageContainer.innerHTML = '';
+            }, 5000);
+        }
+        
+        function showModal(title, body, action) {
+            modalTitle.textContent = title;
+            modalBody.textContent = body;
+            pendingAction = action;
+            modal.style.display = 'block';
+        }
+        
+        function hideModal() {
+            modal.style.display = 'none';
+            pendingAction = null;
+        }
+        
+        async function loadRepos() {
+            try {
+                setStatus('loading repositories');
+                const response = await fetch('/api/repos');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                repos = data.repos;
+                
+                // Populate repo selector
+                repoSelect.innerHTML = '';
+                repos.forEach((repo, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `Repository ${index} (${new URL(repo).hostname})`;
+                    repoSelect.appendChild(option);
+                });
+                
+                loadModules();
+            } catch (error) {
+                showMessage(`Failed to load repositories: ${error.message}`);
+                setStatus('error');
+            }
+        }
+        
+        async function loadModules() {
+            try {
+                setStatus('loading modules');
+                loadingEl.style.display = 'block';
+                moduleContainer.style.display = 'none';
+                
+                // Load both available and installed modules
+                const [modulesResponse, installedResponse] = await Promise.all([
+                    fetch(`/api/modules?repo_id=${currentRepoId}`),
+                    fetch('/api/installed')
+                ]);
+                
+                const modulesData = await modulesResponse.json();
+                const installedData = await installedResponse.json();
+                
+                if (modulesData.error) {
+                    throw new Error(modulesData.error);
+                }
+                
+                if (installedData.error) {
+                    throw new Error(installedData.error);
+                }
+                
+                availableModules = modulesData.modules;
+                installedModules = installedData.modules;
+                
+                renderModules();
+                setStatus('idle');
+            } catch (error) {
+                showMessage(`Failed to load modules: ${error.message}`);
+                setStatus('error');
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+        
+        function getModuleStatus(module) {
+            const sourceUrl = module.source;
+            
+            // Check if installed
+            for (const installedModule of Object.values(installedModules)) {
+                if (installedModule.source === sourceUrl) {
+                    const installedVersion = installedModule.version;
+                    const availableVersion = module.version;
+                    
+                    if (compareVersions(installedVersion, availableVersion) < 0) {
+                        return { status: 'update-available', text: `Update to ${availableVersion}`, installed: true, installedVersion };
+                    } else {
+                        return { status: 'installed', text: `Installed (${installedVersion})`, installed: true, installedVersion };
+                    }
+                }
+            }
+            
+            return { status: 'available', text: 'Available', installed: false };
+        }
+        
+        function compareVersions(version1, version2) {
+            const v1parts = version1.split('.').map(Number);
+            const v2parts = version2.split('.').map(Number);
+            
+            for (let i = 0; i < Math.max(v1parts.length, v2parts.length); i++) {
+                const v1part = v1parts[i] || 0;
+                const v2part = v2parts[i] || 0;
+                
+                if (v1part < v2part) return -1;
+                if (v1part > v2part) return 1;
+            }
+            
+            return 0;
+        }
+        
+        function renderModules() {
+            moduleContainer.innerHTML = '';
+            
+            if (availableModules.length === 0) {
+                moduleContainer.innerHTML = '<p style="text-align: center; color: #a6adc8;">No modules found in this repository.</p>';
+                moduleContainer.style.display = 'block';
+                return;
+            }
+            
+            availableModules.forEach(module => {
+                const moduleStatus = getModuleStatus(module);
+                const moduleCard = createModuleCard(module, moduleStatus);
+                moduleContainer.appendChild(moduleCard);
+            });
+            
+            moduleContainer.style.display = 'grid';
+            filterModules();
+        }
+        
+        function createModuleCard(module, moduleStatus) {
+            const card = document.createElement('div');
+            card.className = `module-card ${moduleStatus.status === 'installed' ? 'installed' : ''} ${moduleStatus.status === 'update-available' ? 'update-available' : ''}`;
+            card.dataset.status = moduleStatus.status;
+            
+            const dependencies = module.dependencies || [];
+            const dependenciesHtml = dependencies.length > 0 ? `
+                <div class="dependencies">
+                    <div class="dependencies-title">Dependencies:</div>
+                    ${dependencies.map(dep => `<div class="dependency-item">• ${dep.module.split('/').pop().replace('.py', '')}${dep.soft ? ' (optional)' : ''}</div>`).join('')}
+                </div>
+            ` : '';
+            
+            card.innerHTML = `
+                <div class="module-header">
+                    <h3 class="module-title">${module.name}</h3>
+                    <span class="module-version">v${module.version}</span>
+                </div>
+                <div class="module-author">by ${module.author}</div>
+                <div class="module-description">${module.description}</div>
+                <div class="module-status">
+                    <span class="status-icon ${moduleStatus.status}"></span>
+                    <span class="status-text">${moduleStatus.text}</span>
+                </div>
+                ${dependenciesHtml}
+                <div class="module-actions">
+                    ${createActionButtons(module, moduleStatus)}
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function createActionButtons(module, moduleStatus) {
+            if (moduleStatus.status === 'available') {
+                return `<button class="btn primary" onclick="installModule('${module.name}')">Install</button>`;
+            } else if (moduleStatus.status === 'installed') {
+                return `<button class="btn danger" onclick="uninstallModule('${module.source}', '${module.name}')">Uninstall</button>`;
+            } else if (moduleStatus.status === 'update-available') {
+                return `
+                    <button class="btn success" onclick="updateModule('${module.source}', '${module.name}')">Update</button>
+                    <button class="btn danger" onclick="uninstallModule('${module.source}', '${module.name}')">Uninstall</button>
+                `;
+            }
+            return '';
+        }
+        
+        function filterModules() {
+            const showInstalled = showInstalledCheck.checked;
+            const showAvailable = showAvailableCheck.checked;
+            const showUpdates = showUpdatesCheck.checked;
+            
+            const cards = moduleContainer.querySelectorAll('.module-card');
+            cards.forEach(card => {
+                const status = card.dataset.status;
+                let show = false;
+                
+                if (status === 'installed' && showInstalled) show = true;
+                if (status === 'available' && showAvailable) show = true;
+                if (status === 'update-available' && showUpdates) show = true;
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+        
+        async function installModule(moduleName) {
+            showModal(
+                'Install Module',
+                `Are you sure you want to install "${moduleName}"? This will download and install the module along with its dependencies.`,
+                async () => {
+                    try {
+                        setStatus(`installing ${moduleName}`);
+                        const response = await fetch('/api/install', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                module_name: moduleName,
+                                repo_id: currentRepoId
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            showMessage(`Successfully installed ${moduleName}. Restart the bot to load the module.`, 'success');
+                            loadModules(); // Refresh the list
+                        } else {
+                            showMessage(data.message || `Failed to install ${moduleName}`);
+                        }
+                    } catch (error) {
+                        showMessage(`Error installing ${moduleName}: ${error.message}`);
+                    } finally {
+                        setStatus('idle');
+                    }
+                }
+            );
+        }
+        
+        async function uninstallModule(sourceUrl, moduleName) {
+            showModal(
+                'Uninstall Module',
+                `Are you sure you want to uninstall "${moduleName}"? This action cannot be undone.`,
+                async () => {
+                    try {
+                        setStatus(`uninstalling ${moduleName}`);
+                        const response = await fetch('/api/uninstall', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                source_url: sourceUrl
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            showMessage(`Successfully uninstalled ${moduleName}. Restart the bot to complete removal.`, 'success');
+                            loadModules(); // Refresh the list
+                        } else {
+                            showMessage(data.message || `Failed to uninstall ${moduleName}`);
+                        }
+                    } catch (error) {
+                        showMessage(`Error uninstalling ${moduleName}: ${error.message}`);
+                    } finally {
+                        setStatus('idle');
+                    }
+                }
+            );
+        }
+        
+        async function updateModule(sourceUrl, moduleName) {
+            showModal(
+                'Update Module',
+                `Are you sure you want to update "${moduleName}"? This will replace the current version with the latest one.`,
+                async () => {
+                    try {
+                        setStatus(`updating ${moduleName}`);
+                        const response = await fetch('/api/update', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                source_url: sourceUrl
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            showMessage(`Successfully updated ${moduleName}. Restart the bot to load the updated module.`, 'success');
+                            loadModules(); // Refresh the list
+                        } else {
+                            showMessage(data.message || `Failed to update ${moduleName}`);
+                        }
+                    } catch (error) {
+                        showMessage(`Error updating ${moduleName}: ${error.message}`);
+                    } finally {
+                        setStatus('idle');
+                    }
+                }
+            );
+        }
+        
+        async function updateAllModules() {
+            showModal(
+                'Update All Modules',
+                'Are you sure you want to update all modules that have available updates? This may take a while.',
+                async () => {
+                    try {
+                        setStatus('updating all modules');
+                        const response = await fetch('/api/update-all', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.results) {
+                            const updated = Object.entries(data.results).filter(([name, success]) => success);
+                            const failed = Object.entries(data.results).filter(([name, success]) => !success);
+                            
+                            let message = '';
+                            if (updated.length > 0) {
+                                message += `Successfully updated: ${updated.map(([name]) => name).join(', ')}. `;
+                            }
+                            if (failed.length > 0) {
+                                message += `Failed to update: ${failed.map(([name]) => name).join(', ')}. `;
+                            }
+                            
+                            if (updated.length > 0) {
+                                message += 'Restart the bot to load updated modules.';
+                                showMessage(message, 'success');
+                            } else if (failed.length > 0) {
+                                showMessage(message);
+                            } else {
+                                showMessage('No modules needed updating.', 'success');
+                            }
+                            
+                            loadModules(); // Refresh the list
+                        } else {
+                            showMessage(data.error || 'Failed to update modules');
+                        }
+                    } catch (error) {
+                        showMessage(`Error updating modules: ${error.message}`);
+                    } finally {
+                        setStatus('idle');
+                    }
+                }
+            );
+        }
+    </script>
+</body>
+</html>
