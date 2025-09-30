@@ -8,10 +8,6 @@ app = Flask(__name__)
 with open ('config.yml', 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
 
-# Generate a secret key based on the dashboard password for session security
-import hashlib
-app.secret_key = hashlib.sha256(f"squishy-dashboard-{config['dashboard']['password']}".encode()).hexdigest()
-
 def require_auth(f):
     """Decorator to require authentication for routes"""
     @wraps(f)
