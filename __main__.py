@@ -8,7 +8,7 @@ import yaml
 from logger import Logger
 logger = Logger("bootstrap")
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 GITHUB_REPO = "enhancedrock/squishy"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"

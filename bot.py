@@ -7,7 +7,7 @@ import yaml
 from logger import Logger
 logger = Logger("bot", log_level="DEBUG")
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.INFO)
