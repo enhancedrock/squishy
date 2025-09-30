@@ -4,6 +4,7 @@ import subprocess
 import zipfile
 import io
 import threading
+import yaml
 from logger import Logger
 logger = Logger("bootstrap")
 
@@ -12,6 +13,17 @@ __version__ = "3.0.0"
 GITHUB_REPO = "enhancedrock/squishy"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 ZIP_URL_TEMPLATE = "https://github.com/{repo}/archive/refs/tags/{tag}.zip"
+
+def load_config():
+    """Load configuration from config.yml"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(script_dir, "config.yml")
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        logger.warning(f"Could not load config.yml: {e}")
+        return {}
 
 def get_latest_release_version():
     """Fetch the latest release version from GitHub API"""
@@ -131,7 +143,6 @@ def ensure_venv():
     else:
         venv_python = os.path.join(venv_path, "bin", "python")
     
-    # Always ensure requirements are up to date
     def install_requirements():
         if os.path.exists(requirements_path):
             logger.info("Installing/updating requirements...")
@@ -150,8 +161,10 @@ def ensure_venv():
     # Check if we're already running with the correct local venv python
     if sys.executable == venv_python:
         logger.info("Already running in the local virtual environment")
-        # Still update requirements even if already in the right venv
-        install_requirements()
+        # Only install requirements if we haven't already done so in this session
+        if not hasattr(ensure_venv, '_requirements_installed'):
+            install_requirements()
+            ensure_venv._requirements_installed = True
         return
     
     logger.info(f"Switching to local virtual environment at {venv_path}")
@@ -227,7 +240,11 @@ def run_subprocess_with_output(script_name, script_path):
 if __name__ == "__main__":
     main()
     
-    # Run bot and dashboard simultaneously
+    # Load config to check if dashboard should be enabled
+    config = load_config()
+    dashboard_enabled = config.get('dashboard', {}).get('enabled', True)
+    
+    # Run bot and conditionally dashboard
     script_dir = os.path.dirname(__file__)
     bot_path = os.path.join(script_dir, "bot.py")
     dashboard_path = os.path.join(script_dir, "dashboard.py")
@@ -238,18 +255,29 @@ if __name__ == "__main__":
     def run_dashboard():
         run_subprocess_with_output("dashboard.py", dashboard_path)
     
-    # Start both in separate threads
+    # Start bot thread
     bot_thread = threading.Thread(target=run_bot, name="BotThread")
-    dashboard_thread = threading.Thread(target=run_dashboard, name="DashboardThread")
-
     bot_thread.start()
-    dashboard_thread.start()
+    
+    # Start dashboard thread only if enabled
+    dashboard_thread = None
+    if dashboard_enabled:
+        logger.info("Dashboard is enabled, starting dashboard...")
+        dashboard_thread = threading.Thread(target=run_dashboard, name="DashboardThread")
+        dashboard_thread.start()
+    else:
+        logger.info("Dashboard is disabled in config, skipping dashboard startup")
     
     try:
-        # Wait for both to complete
+        # Wait for bot to complete
         bot_thread.join()
-        dashboard_thread.join()
-        logger.info("Both processes have finished.")
+        
+        # Wait for dashboard if it was started
+        if dashboard_thread:
+            dashboard_thread.join()
+            logger.info("Both processes have finished.")
+        else:
+            logger.info("Bot process has finished.")
     except KeyboardInterrupt:
         logger.info("Received interrupt signal. Shutting down...")
         sys.exit(0)
