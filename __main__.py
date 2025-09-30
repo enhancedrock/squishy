@@ -95,10 +95,10 @@ def create_and_activate_venv():
     # Determine the python executable path in the venv
     if sys.platform == "win32":
         venv_python = os.path.join(venv_path, "Scripts", "python.exe")
-        venv_pip = os.path.join(venv_path, "Scripts", "pip.exe")
+        venv_pip = os.path.join(venv_path, "Scripts", "pip3.exe")
     else:
         venv_python = os.path.join(venv_path, "bin", "python")
-        venv_pip = os.path.join(venv_path, "bin", "pip")
+        venv_pip = os.path.join(venv_path, "bin", "pip3")
     
     # Install requirements if the file exists
     if os.path.exists(requirements_path):
