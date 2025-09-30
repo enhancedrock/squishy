@@ -520,6 +520,17 @@ async def on_message(message):
 @squishy.command(brief="List available modules from repositories")
 async def modules(ctx, repo_id: int = 0):
     """List all available modules from a specific repository"""
+    # Check if user has permission to view modules
+    if not ctx.author.guild_permissions.administrator:
+        embed = discord.Embed(
+            title="Permission Denied",
+            description="You need administrator permissions to view available modules.",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+        return
+    
     try:
         import market
         modules_list = market.list_available_modules(repo_id)
@@ -581,19 +592,17 @@ async def modules(ctx, repo_id: int = 0):
 @squishy.command(brief="Install a module by name")
 async def install(ctx, *, module_name: str):
     """Install a module by its name from the default repository"""
+    if not ctx.author.guild_permissions.administrator:
+        embed = discord.Embed(
+            title="Permission Denied",
+            description="You need administrator permissions to view installed modules.",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+        return
     try:
         import market
-        
-        # Check if user has permission (you can customize this)
-        if not ctx.author.guild_permissions.administrator:
-            embed = discord.Embed(
-                title="Permission Denied",
-                description="You need administrator permissions to install modules.",
-                color=squishy.error_embed_color
-            )
-            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
-            await ctx.reply(embed=embed)
-            return
         
         # Send initial message
         embed = discord.Embed(
@@ -635,19 +644,17 @@ async def install(ctx, *, module_name: str):
 @squishy.command(brief="Update all installed modules")
 async def updatemodules(ctx):
     """Update all installed modules that have available updates"""
+    if not ctx.author.guild_permissions.administrator:
+        embed = discord.Embed(
+            title="Permission Denied",
+            description="You need administrator permissions to view installed modules.",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+        return
     try:
         import market
-        
-        # Check if user has permission
-        if not ctx.author.guild_permissions.administrator:
-            embed = discord.Embed(
-                title="Permission Denied",
-                description="You need administrator permissions to update modules.",
-                color=squishy.error_embed_color
-            )
-            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
-            await ctx.reply(embed=embed)
-            return
         
         # Send initial message
         embed = discord.Embed(
@@ -707,6 +714,15 @@ async def updatemodules(ctx):
 @squishy.command(brief="Show installed modules")
 async def installed(ctx):
     """Show all currently installed modules"""
+    if not ctx.author.guild_permissions.administrator:
+        embed = discord.Embed(
+            title="Permission Denied",
+            description="You need administrator permissions to view installed modules.",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+        return
     try:
         import market
         
@@ -765,19 +781,17 @@ async def installed(ctx):
 @squishy.command(brief="Uninstall a module")
 async def uninstall(ctx, *, module_name: str):
     """Uninstall a module by its name"""
+    if not ctx.author.guild_permissions.administrator:
+        embed = discord.Embed(
+            title="Permission Denied",
+            description="You need administrator permissions to view installed modules.",
+            color=squishy.error_embed_color
+        )
+        embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
+        await ctx.reply(embed=embed)
+        return
     try:
         import market
-        
-        # Check if user has permission
-        if not ctx.author.guild_permissions.administrator:
-            embed = discord.Embed(
-                title="Permission Denied",
-                description="You need administrator permissions to uninstall modules.",
-                color=squishy.error_embed_color
-            )
-            embed.set_footer(text="Squishy bot by @enhancedrock", icon_url="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png")
-            await ctx.reply(embed=embed)
-            return
         
         # Find the module by name
         installed_modules = market.get_installed_modules()

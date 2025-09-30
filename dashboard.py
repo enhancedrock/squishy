@@ -1,18 +1,63 @@
 import yaml
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify, session, redirect, url_for
 import os
+from functools import wraps
 
 app = Flask(__name__)
 
 with open ('config.yml', 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)
 
+# Generate a secret key based on the dashboard password for session security
+import hashlib
+app.secret_key = hashlib.sha256(f"squishy-dashboard-{config['dashboard']['password']}".encode()).hexdigest()
+
+def require_auth(f):
+    """Decorator to require authentication for routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'authenticated' not in session or not session['authenticated']:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def require_auth_api(f):
+    """Decorator to require authentication for API routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'authenticated' not in session or not session['authenticated']:
+            return jsonify({'error': 'Authentication required'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/login')
+def login():
+    return send_from_directory('webui', 'login.html')
+
+@app.route('/login', methods=['POST'])
+def login_post():
+    data = request.get_json()
+    password = data.get('password')
+    
+    if password == config['dashboard']['password']:
+        session['authenticated'] = True
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': 'Invalid password'}), 401
+
+@app.route('/logout')
+def logout():
+    session.pop('authenticated', None)
+    return redirect(url_for('login'))
+
 @app.route('/')
 @app.route('/index')
+@require_auth
 def index():
     return send_from_directory('webui', 'dash.html')
 
 @app.route('/configs')
+@require_auth_api
 def get_configs():
     configs = []
     if config['dashboard']['allow-config-edit']:
@@ -23,16 +68,19 @@ def get_configs():
     return {'configs': configs}
 
 @app.route('/marketenabled')
+@require_auth_api
 def market_enabled():
     return {'enabled': config['dashboard']['allow-module-edit']}
 
 @app.route('/market')
+@require_auth
 def market():
     if not config['dashboard']['allow-module-edit']:
         return "Module installation is disabled", 403
     return send_from_directory('webui', 'market.html')
 
 @app.route('/api/repos')
+@require_auth_api
 def get_repos():
     if not config['dashboard']['allow-module-edit']:
         return jsonify({'error': 'Module installation is disabled'}), 403
@@ -45,6 +93,7 @@ def get_repos():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/modules')
+@require_auth_api
 def get_modules():
     if not config['dashboard']['allow-module-edit']:
         return jsonify({'error': 'Module installation is disabled'}), 403
@@ -59,6 +108,7 @@ def get_modules():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/installed')
+@require_auth_api
 def get_installed_modules():
     if not config['dashboard']['allow-module-edit']:
         return jsonify({'error': 'Module installation is disabled'}), 403
@@ -71,6 +121,7 @@ def get_installed_modules():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/install', methods=['POST'])
+@require_auth_api
 def install_module():
     if not config['dashboard']['allow-module-edit']:
         return jsonify({'error': 'Module installation is disabled'}), 403
@@ -90,6 +141,7 @@ def install_module():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/uninstall', methods=['POST'])
+@require_auth_api
 def uninstall_module():
     if not config['dashboard']['allow-module-edit']:
         return jsonify({'error': 'Module installation is disabled'}), 403
@@ -108,6 +160,7 @@ def uninstall_module():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/update', methods=['POST'])
+@require_auth_api
 def update_module():
     if not config['dashboard']['allow-module-edit']:
         return jsonify({'error': 'Module installation is disabled'}), 403
@@ -131,6 +184,7 @@ def update_module():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/update-all', methods=['POST'])
+@require_auth_api
 def update_all_modules():
     if not config['dashboard']['allow-module-edit']:
         return jsonify({'error': 'Module installation is disabled'}), 403
@@ -143,6 +197,7 @@ def update_all_modules():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/getconfig')
+@require_auth_api
 def get_config():
     config_name = request.headers.get('config')
     
@@ -179,6 +234,7 @@ def get_config():
         return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 @app.route('/saveconfig', methods=['POST'])
+@require_auth_api
 def save_config():
     config_name = request.headers.get('config')
     yaml_content = request.get_data(as_text=True)

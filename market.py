@@ -12,8 +12,10 @@ with open ('config.yml', 'r', encoding='utf-8') as f:
 def getrepos():
     """Get all repos in the config"""
     repos = []
-    repos.append("https://raw.githubusercontent.com/enhancedrock/squishy/refs/heads/modules/repo.json")
-    repos.extend(config['market']['repos'])
+    repos.append("https://raw.githubusercontent.com/enhancedrock/squishymodules/refs/heads/main/repod.json")
+    # Filter out None/empty values from config repos
+    config_repos = [repo for repo in config['market']['repos'] if repo and repo.strip()]
+    repos.extend(config_repos)
     return repos
 
 def getrepojson(repoid: int):
@@ -71,6 +73,40 @@ def is_module_installed(source_url: str) -> bool:
             return True
     return False
 
+def add_module_to_config(module_filename: str) -> bool:
+    """Add a module to the enabled modules list in config.yml"""
+    try:
+        # Read current config
+        with open('config.yml', 'r', encoding='utf-8') as f:
+            config_data = yaml.safe_load(f)
+        
+        # Get module name without .py extension
+        module_name = module_filename[:-3] if module_filename.endswith('.py') else module_filename
+        
+        # Ensure market.enabled exists and is a list
+        if 'market' not in config_data:
+            config_data['market'] = {}
+        if 'enabled' not in config_data['market']:
+            config_data['market']['enabled'] = []
+        
+        # Add module if not already in the list
+        if module_name not in config_data['market']['enabled']:
+            config_data['market']['enabled'].append(module_name)
+            
+            # Write updated config back to file
+            with open('config.yml', 'w', encoding='utf-8') as f:
+                yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+            
+            print(f"Added {module_name} to enabled modules in config.yml")
+            return True
+        else:
+            print(f"Module {module_name} is already enabled in config.yml")
+            return True
+            
+    except (IOError, yaml.YAMLError) as e:
+        print(f"Failed to update config.yml: {e}")
+        return False
+
 def install_module(module_data: Dict) -> bool:
     """Install a module from module data"""
     try:
@@ -100,11 +136,47 @@ def install_module(module_data: Dict) -> bool:
         with open(module_path, 'w', encoding='utf-8') as file:
             file.write(response.text)
         
+        # Add module to config.yml enabled list
+        if not add_module_to_config(filename):
+            print(f"Warning: Failed to add {module_name} to config.yml enabled list")
+        
         print(f"Successfully installed module: {module_name}")
         return True
         
     except (requests.RequestException, IOError, OSError) as e:
         print(f"Failed to install module {module_data.get('name', 'Unknown')}: {e}")
+        return False
+
+def remove_module_from_config(module_filename: str) -> bool:
+    """Remove a module from the enabled modules list in config.yml"""
+    try:
+        # Read current config
+        with open('config.yml', 'r', encoding='utf-8') as f:
+            config_data = yaml.safe_load(f)
+        
+        # Get module name without .py extension
+        module_name = module_filename[:-3] if module_filename.endswith('.py') else module_filename
+        
+        # Check if market.enabled exists and remove the module
+        if 'market' in config_data and 'enabled' in config_data['market']:
+            if module_name in config_data['market']['enabled']:
+                config_data['market']['enabled'].remove(module_name)
+                
+                # Write updated config back to file
+                with open('config.yml', 'w', encoding='utf-8') as f:
+                    yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+                
+                print(f"Removed {module_name} from enabled modules in config.yml")
+                return True
+            else:
+                print(f"Module {module_name} was not in enabled list")
+                return True
+        else:
+            print("No enabled modules list found in config.yml")
+            return True
+            
+    except (IOError, yaml.YAMLError) as e:
+        print(f"Failed to update config.yml: {e}")
         return False
 
 def uninstall_module(source_url: str) -> bool:
@@ -116,6 +188,11 @@ def uninstall_module(source_url: str) -> bool:
             try:
                 module_path = os.path.join('modules', module_info['filename'])
                 os.remove(module_path)
+                
+                # Remove module from config.yml enabled list
+                if not remove_module_from_config(module_info['filename']):
+                    print(f"Warning: Failed to remove {module_info.get('name', 'Unknown')} from config.yml enabled list")
+                
                 print(f"Successfully uninstalled module: {module_info.get('name', 'Unknown')}")
                 return True
             except (OSError, FileNotFoundError) as e:

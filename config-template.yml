@@ -48,16 +48,14 @@ dashboard:
   # Dashboard password
   password: squishable
   # If modules can be installed via the dashboard
-  allow-module-install: true
+  allow-module-edit: true
   # If repos can be added via the dashboard
-  allow-repo-add: true
+  allow-repo-edit: true
   # If the main config can be edited via the dashboard
   allow-config-edit: false
 
 modules:
   # The additional repos to pull modules from
-  repos:
-    -
+  repos: []
   # Enabled modules
-  enabled:
-    -
+  enabled: []

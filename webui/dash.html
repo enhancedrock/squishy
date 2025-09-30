@@ -61,7 +61,10 @@
 <body>
     <div class="topbar">
         <h1>Squishy Configurator</h1>
-        <p>loading</p>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="/logout" style="color: #a6adc8; text-decoration: none; font-family: 'Lexend', sans-serif; font-size: 0.9em; padding: 5px 10px; border: 1px solid #45475a; border-radius: 3px; transition: all 0.2s;" onmouseover="this.style.color='#cdd6f4'; this.style.borderColor='#585b70'" onmouseout="this.style.color='#a6adc8'; this.style.borderColor='#45475a'">Logout</a>
+            <p>loading</p>
+        </div>
     </div>
     <div style="display: flex; height: 92.5vh;">
         <div style="width: 20vw; height: 100%; background-color: #1e1e2e; box-sizing: border-box; border-right: 2px solid #45475a;">
@@ -133,8 +136,20 @@
         
         // Fetch both configs and market status
         Promise.all([
-            fetch('/configs').then(response => response.json()),
-            fetch('/marketenabled').then(response => response.json())
+            fetch('/configs').then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return Promise.reject('Unauthorized');
+                }
+                return response.json();
+            }),
+            fetch('/marketenabled').then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return Promise.reject('Unauthorized');
+                }
+                return response.json();
+            })
         ])
             .then(([configsData, marketData]) => {
                 const leftBar = document.querySelector('div[style*="width: 20vw"]');
@@ -172,7 +187,13 @@
                                     'config': name
                                 }
                             })
-                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 401) {
+                                    window.location.href = '/login';
+                                    return Promise.reject('Unauthorized');
+                                }
+                                return response.json();
+                            })
                             .then(configData => {
                                 if (configData.error) {
                                     editor.setValue('# Error: ' + configData.error);
@@ -259,7 +280,13 @@
                 },
                 body: yamlContent
             })
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return Promise.reject('Unauthorized');
+                }
+                return response.json();
+            })
             .then(result => {
                 if (result.success) {
                     document.querySelector('.topbar p').textContent = 'saved';

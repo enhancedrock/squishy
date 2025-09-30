@@ -143,6 +143,14 @@
             margin-bottom: 20px;
         }
         
+        .action-buttons .btn {
+            flex: 1;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
         .btn {
             padding: 10px 16px;
             background: #313244;
@@ -407,19 +415,23 @@
             }
         }
     </style>
-    <title>Squishy Module Market</title>
+    <title>Squishy Dashboard</title>
 </head>
 <body>
     <div class="topbar">
-        <h1>Module Market</h1>
+        <h1>Squishy Market</h1>
         <div class="actions">
-            <a href="/" class="back-btn">← Back to Dashboard</a>
+            <a href="/logout" style="color: #a6adc8; text-decoration: none; font-family: 'Lexend', sans-serif; font-size: 0.9em; padding: 5px 10px; border: 1px solid #45475a; border-radius: 3px; transition: all 0.2s;" onmouseover="this.style.color='#cdd6f4'; this.style.borderColor='#585b70'" onmouseout="this.style.color='#a6adc8'; this.style.borderColor='#45475a'">Logout</a>
             <p id="status">loading</p>
         </div>
     </div>
     
     <div class="main-container">
         <div class="sidebar">
+            <div style="margin-bottom: 20px;">
+                <a href="/" class="back-btn" style="width: 100%; text-align: center; display: block; box-sizing: border-box;"> Configurator</a>
+            </div>
+            
             <div class="repo-selector">
                 <label for="repo-select">Repository:</label>
                 <select id="repo-select">
@@ -503,6 +515,16 @@
         
         let pendingAction = null;
         
+        // Helper function to handle authenticated fetch
+        async function authenticatedFetch(url, options = {}) {
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                window.location.href = '/login';
+                throw new Error('Unauthorized');
+            }
+            return response;
+        }
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadRepos();
@@ -572,7 +594,10 @@
         async function loadRepos() {
             try {
                 setStatus('loading repositories');
-                const response = await fetch('/api/repos');
+                const response = await authenticatedFetch('/api/repos');
+                
+
+                
                 const data = await response.json();
                 
                 if (data.error) {
@@ -605,9 +630,11 @@
                 
                 // Load both available and installed modules
                 const [modulesResponse, installedResponse] = await Promise.all([
-                    fetch(`/api/modules?repo_id=${currentRepoId}`),
-                    fetch('/api/installed')
+                    authenticatedFetch(`/api/modules?repo_id=${currentRepoId}`),
+                    authenticatedFetch('/api/installed')
                 ]);
+                
+
                 
                 const modulesData = await modulesResponse.json();
                 const installedData = await installedResponse.json();
@@ -759,7 +786,7 @@
                 async () => {
                     try {
                         setStatus(`installing ${moduleName}`);
-                        const response = await fetch('/api/install', {
+                        const response = await authenticatedFetch('/api/install', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -794,7 +821,7 @@
                 async () => {
                     try {
                         setStatus(`uninstalling ${moduleName}`);
-                        const response = await fetch('/api/uninstall', {
+                        const response = await authenticatedFetch('/api/uninstall', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -828,7 +855,7 @@
                 async () => {
                     try {
                         setStatus(`updating ${moduleName}`);
-                        const response = await fetch('/api/update', {
+                        const response = await authenticatedFetch('/api/update', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -862,7 +889,7 @@
                 async () => {
                     try {
                         setStatus('updating all modules');
-                        const response = await fetch('/api/update-all', {
+                        const response = await authenticatedFetch('/api/update-all', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'

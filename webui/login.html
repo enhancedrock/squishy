@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #181825;
+            font-family: 'Lexend', sans-serif;
+            color: #cdd6f4;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background-color: #313244;
+            border: 2px solid #45475a;
+            border-radius: 8px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-title {
+            color: #cdd6f4;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        
+        .form-group label {
+            color: #cdd6f4;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            padding: 12px;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border: 2px solid #45475a;
+            border-radius: 5px;
+            font-family: 'Lexend', sans-serif;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #89b4fa;
+        }
+        
+        .login-btn {
+            padding: 12px 24px;
+            background: #89b4fa;
+            color: #181825;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Lexend', sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .login-btn:hover {
+            background: #74c7ec;
+        }
+        
+        .login-btn:disabled {
+            background: #585b70;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .error-message {
+            background: #f38ba8;
+            color: #181825;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .logo {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: url('https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png') center/cover;
+            border-radius: 50%;
+        }
+        
+        .subtitle {
+            color: #a6adc8;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+    </style>
+    <title>Squishy Dashboard - Login</title>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo"></div>
+        <h1 class="login-title">Squishy Dashboard</h1>
+        <p class="subtitle">Enter your dashboard password to continue</p>
+        
+        <form class="login-form" id="login-form">
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="login-btn">Login</button>
+        </form>
+        
+        <div class="error-message" id="error-message">
+            Invalid password. Please try again.
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('login-form');
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('login-btn');
+            const errorMessage = document.getElementById('error-message');
+            
+            // Focus password input on load
+            passwordInput.focus();
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const password = passwordInput.value;
+                
+                if (!password) {
+                    showError('Please enter a password');
+                    return;
+                }
+                
+                // Disable form during login
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Logging in...';
+                hideError();
+                
+                try {
+                    const response = await fetch('/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ password: password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Redirect to dashboard
+                        window.location.href = '/';
+                    } else {
+                        showError(data.error || 'Invalid password. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showError('An error occurred. Please try again.');
+                } finally {
+                    // Re-enable form
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Login';
+                }
+            });
+            
+            // Hide error when user starts typing
+            passwordInput.addEventListener('input', function() {
+                hideError();
+            });
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+            
+            function hideError() {
+                errorMessage.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
