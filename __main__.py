@@ -95,16 +95,14 @@ def create_and_activate_venv():
     # Determine the python executable path in the venv
     if sys.platform == "win32":
         venv_python = os.path.join(venv_path, "Scripts", "python.exe")
-        venv_pip = os.path.join(venv_path, "Scripts", "pip3.exe")
     else:
         venv_python = os.path.join(venv_path, "bin", "python")
-        venv_pip = os.path.join(venv_path, "bin", "pip3")
     
     # Install requirements if the file exists
     if os.path.exists(requirements_path):
         logger.info("Installing requirements...")
         try:
-            subprocess.run([venv_pip, "install", "-r", requirements_path], 
+            subprocess.run([venv_python, "-m", "pip", "install", "-r", requirements_path], 
                           capture_output=True, text=True, check=True)
             logger.info("Requirements installed successfully")
         except subprocess.CalledProcessError as e:
@@ -130,17 +128,15 @@ def ensure_venv():
     # Determine the python executable path in the local venv
     if sys.platform == "win32":
         venv_python = os.path.join(venv_path, "Scripts", "python.exe")
-        venv_pip = os.path.join(venv_path, "Scripts", "pip3.exe")
     else:
         venv_python = os.path.join(venv_path, "bin", "python")
-        venv_pip = os.path.join(venv_path, "bin", "pip3")
     
     # Always ensure requirements are up to date
     def install_requirements():
         if os.path.exists(requirements_path):
             logger.info("Installing/updating requirements...")
             try:
-                subprocess.run([venv_pip, "install", "-r", requirements_path], 
+                subprocess.run([venv_python, "-m", "pip", "install", "-r", requirements_path], 
                               capture_output=True, text=True, check=True)
                 return True
             except subprocess.CalledProcessError as e:
