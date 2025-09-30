@@ -1,9 +1,9 @@
 import time
+import logging
 import asyncio
 import discord
 from discord.ext import commands
 import yaml
-import logging
 from logger import Logger
 logger = Logger("bot", log_level="DEBUG")
 

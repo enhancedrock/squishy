@@ -1,10 +1,9 @@
-import yaml 
-import requests
 import os
 import importlib.util
 import importlib
-import sys
 from typing import List, Dict, Optional, Tuple
+import yaml
+import requests
 
 with open ('config.yml', 'r', encoding='utf-8') as f:
     config = yaml.safe_load(f)

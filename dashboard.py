@@ -1,7 +1,7 @@
-import yaml
-from flask import Flask, send_from_directory, request, jsonify, session, redirect, url_for
 import os
 from functools import wraps
+import yaml
+from flask import Flask, send_from_directory, request, jsonify, session, redirect, url_for
 
 app = Flask(__name__)
 
