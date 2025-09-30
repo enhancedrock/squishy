@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 import yaml
 from logger import Logger
-logger = Logger("bot", log_level="DEBUG")
+logger = Logger("bot", log_level="INFO")
 
 __version__ = "3.0.1"
 
