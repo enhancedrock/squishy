@@ -1,5 +1,5 @@
 <h1 align="center">
-<img width="75" src="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png" alt="Squishy, a blue slime girl character by @enhancedrock">
+<img width="75" src="https://raw.githubusercontent.com/enhancedrock/enhancedrock/refs/heads/main/squishypfp.png" alt="Squishy, a blue slime girl character by @enhancedrock, art by @chewyffon">
 
 squishy
 </h1>
@@ -18,17 +18,15 @@ I can't afford to host a bot for however many servers to use. And this way, peop
 
 ## Hey, you said this could do everything I need, but there's no moderation!
 
-Use Wick. It's the perfect moderation bot. If you really want it to be a part of Squishy, feel free to write an addon! Upload it to github/make a PR to add it to the bot if you want, too.
+Use Wick. It's the perfect moderation bot. If you really want it to be a part of Squishy, feel free to write an addon! I may at some point.
 
 ## Setup
 
 1. Make an 'New Application' in the [Discord Developer Portal](https://discord.com/developers/applications).
 2. Optionally, give it a Profile Picture and Description, before heading to 'Installation'.
 > [!NOTE]
-> Squishy's normal profile picture is available in the root of the `squishy` folder as `squishypfp.png`, downloaded in step 8. Credit for this goes to Chewy/chewyffon/@chewyffon.
+> Squishy's normal profile picture is available in the `assets` folder as `squishypfp.png`, downloaded in step 8. Credit for this goes to Chewy/chewyffon/@chewyffon.
 3. Scroll to 'Guild Install', and add the 'bot' scope, then add the 'Administrator' permission.
-> [!NOTE]
-> Aside from the *(togglable)* auto-updater, which only talks to Github, Squishy never communicates with anything outside of Discord or makes dangerous actions without confirmation, and therefore poses no risk to your Discord server. You may read and self-assess the code if you want.
 4. Now, copy the 'Discord Provided Link', open it and add it to your server.
 5. Return to the Developer Portal at the Installation tab, and change 'Discord Provided Link' to 'None'.
 6. Now go to the 'Bot' section, and disable 'Public Bot'.
@@ -38,42 +36,15 @@ Use Wick. It's the perfect moderation bot. If you really want it to be a part of
 > [!CAUTION]
 > This token is how programs access your bot. **Keep it safe, and do not share it with ANYONE**, or else they can log in as the bot and **do whatever they want to your server.**
 8. Download the latest source code zip from the [releases](https://github.com/enhancedrock/squishy/releases), and extract it somewhere, renaming the folder to `squishy`
-9. Duplicate `config.json.template`, changing the duplicates name to `config.json`
-10. In your new `config.json`, set `bot-token` to the toke we got in step 7, and `server-id` to the server you plan on using Squishy in.
-11. Now, configure any settings you'd like (See the Config section of the README), enable any modules, and configure them (See their individual READMEs)
-12. Open a terminal in the the `squishy` folder and run `python3 -m venv .`
+9. Duplicate `config-template.yml`, changing the duplicates name to `config.yml`
+10. In your new `config.yml`, set `bot-token` to the toke we got in step 7, and `server-id` to the server you plan on using Squishy in.`
+> [!NOTE]
+> Squishy needs Python 3.10.
 
 ## Running Squishy
-That's it! CD into her directory, activate the virtual enviornment and run `python3 .` to start her.
 
-## Config
-
-- `bot-token` The token for your bot
-- `server-id` The ID of your server that you plan to add Squishy to
-- `update-checker` Whether or not Squishy shoudl check for updates on start
-- `auto-updater` Whether or not Squishy should update on start
-- `status-interval` How often Squishy should rotate through her statuses (in seconds)
-- `statuses` The enabled statuses for Squishy to rotate through
-- - `member-count` "Watching {members} members"
-- - `role-count` "Watching {roles} roles"
-- - `channel-count` "Watching {channels} channels"
-- - `github` "Watching github.com/enhancedrock/squishy" (would appreciate it if you left this on :3)
-- - `custom-enabled` If your custom status should be included in the rotation
-- - `custom-type` If your custom status should use 1 for playing, 2 for watching, 3 for listening, and 4 for a standard status
-- - `custom` Your custom status
-- `online` Whether Squishy should be: 1 for Online, 2 for Idle, 3 for Do not Disturb, 4 for Invisible
-- `modules` What modules you'd like enabled
-- - `quotes` See quotes README
-- - `economy` See economy README
-- - `stars` See stars README
-- - `moderation` See moderation README
-- - `levelling` See levelling README
-- - `fun` See fun README
-- - `welcomer` See welcomer README
-- - `autoroles` See autoroles README
-- - `reactroles` See reactroles README
-- - `messagebuilder` See messagebuilder README
-- - `customs` Your custom modules - See customs README
+That's it! You can CD into her parent directory and run `python3 squishy` or CD into her directory and run `python3 .`
+Your next step would be to get some addons from the web UI (go to localhost:6942, the default password is `squishable`), go to Market, and get some addons! (As of the time of writing, the default addons are dummy addons and don't do anything) You can also do this with commands, see s.help for more. Or - look into making some. Look at the template addon in the `assets` folder.
 
 ## License
 
