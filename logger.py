@@ -1,10 +1,12 @@
+"""Preconfigured logger for the project"""
 import logging
 import os
 from typing import Optional
 
 class Logger:
     """Logger used throughout the project"""
-    def __init__(self, name: str = "unnamed", log_level: str = "INFO", log_file: Optional[str] = None):
+    def __init__(self, name: str = "unnamed", log_level: str = "INFO",
+                 log_file: Optional[str] = None):
         """
         Initialize the logger.
         
@@ -35,6 +37,7 @@ class Logger:
         )
 
         class ColorFormatter(logging.Formatter):
+            """Custom formatter to add colors to log levels in console"""
             COLORS = {
                 'DEBUG': '\033[0;36mDEBUG\033[0m',
                 'INFO': '\033[0;34mINFO\033[0m',
@@ -48,8 +51,10 @@ class Logger:
                     record.levelname = self.COLORS[levelname]
                 return super().format(record)
 
+        console_format = ('\033[1;30m[\033[0m%(asctime)s \033[0;35m- \033[0m'
+                          '\033[3m%(name)s \033[0m%(levelname)s\033[1;30m]\033[0m %(message)s')
         console_formatter = ColorFormatter(
-            '\033[1;30m[\033[0m%(asctime)s \033[0;35m- \033[0m\033[3m%(name)s \033[0m%(levelname)s\033[1;30m]\033[0m %(message)s',
+            console_format,
             datefmt='%H:%M:%S'
         )
 
@@ -95,7 +100,9 @@ class Logger:
         """Set the logging level"""
         self.logger.setLevel(getattr(logging, level.upper()))
         for handler in self.logger.handlers:
-            if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+            is_stream_handler = isinstance(handler, logging.StreamHandler)
+            is_not_file_handler = not isinstance(handler, logging.FileHandler)
+            if is_stream_handler and is_not_file_handler:
                 handler.setLevel(getattr(logging, level.upper()))
 
     def get_log_file_path(self) -> str:

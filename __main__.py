@@ -1,3 +1,4 @@
+"""Main bootstrap that handles updating, ensuring requirements, and launching bootstrap & bot"""
 import os
 import sys
 import subprocess
@@ -8,15 +9,16 @@ import yaml
 from logger import Logger
 logger = Logger("bootstrap")
 
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 
 GITHUB_REPO = "enhancedrock/squishy"
 API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 ZIP_URL_TEMPLATE = "https://github.com/{repo}/archive/refs/tags/{tag}.zip"
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 def load_config():
     """Load configuration from config.yml"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(script_dir, "config.yml")
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -39,21 +41,22 @@ def version_tuple(v):
 
 def is_in_venv():
     """Check if we're currently running in a virtual environment"""
-    return hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+    notsysbase = sys.base_prefix != sys.prefix
+    return hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and notsysbase)
 
 def get_venv_path():
     """Get the path to the virtual environment directory"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(script_dir, "venv")
 
 def check_python_version():
     """Check if we're running Python 3.10 or higher"""
+    pyver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     if sys.version_info < (3, 10):
-        logger.error(f"Python 3.10 or higher is required. Current version: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+        logger.error(f"Python 3.10 or higher is required. Current version: {pyver}")
         logger.error("Please install Python 3.10+ and run the script with that version.")
         sys.exit(1)
     else:
-        logger.info(f"Python version check passed: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+        logger.info(f"Python version check passed: {pyver}")
 
 def find_python310():
     """Find Python 3.10+ executable"""
@@ -62,39 +65,38 @@ def find_python310():
         "python3.10", "python3.11", "python3.12", "python3.13",
         "python3", "python"
     ]
-    
+
     for candidate in python_candidates:
         try:
-            result = subprocess.run([candidate, "--version"], 
+            result = subprocess.run([candidate, "--version"],
                                   capture_output=True, text=True, check=True)
             version_output = result.stdout.strip()
             # Extract version number
             version_parts = version_output.split()[1].split('.')
             major, minor = int(version_parts[0]), int(version_parts[1])
-            
+
             if major == 3 and minor >= 10:
                 logger.info(f"Found suitable Python: {candidate} ({version_output})")
                 return candidate
         except (subprocess.CalledProcessError, FileNotFoundError, IndexError, ValueError):
             continue
-    
+
     logger.error("Could not find Python 3.10+ in PATH")
-    logger.error("Please install Python 3.10+ and make sure it's accessible via one of these commands:")
-    logger.error("  python3.10, python3.11, python3.12, python3, or python")
+    logger.error("Please install Python 3.10+ and make sure it's accessible via one of these:")
+    logger.error("python3.10, python3.11, python3.12, python3, or python")
     sys.exit(1)
 
 def create_and_activate_venv():
     """Create a virtual environment and install requirements"""
     # First check if current Python is 3.10+
     check_python_version()
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     venv_path = get_venv_path()
     requirements_path = os.path.join(script_dir, "requirements.txt")
-    
+
     # Find Python 3.10+ executable
     python_executable = find_python310()
-    
+
     # Check if venv already exists
     if os.path.exists(venv_path):
         logger.info("Virtual environment already exists")
@@ -103,18 +105,18 @@ def create_and_activate_venv():
         # Use the found Python 3.10+ executable to create venv
         subprocess.run([python_executable, "-m", "venv", venv_path], check=True)
         logger.info(f"Virtual environment created at {venv_path}")
-    
+
     # Determine the python executable path in the venv
     if sys.platform == "win32":
         venv_python = os.path.join(venv_path, "Scripts", "python.exe")
     else:
         venv_python = os.path.join(venv_path, "bin", "python")
-    
+
     # Install requirements if the file exists
     if os.path.exists(requirements_path):
         logger.info("Installing requirements...")
         try:
-            subprocess.run([venv_python, "-m", "pip", "install", "-r", requirements_path], 
+            subprocess.run([venv_python, "-m", "pip", "install", "-r", requirements_path],
                           capture_output=True, text=True, check=True)
             logger.info("Requirements installed successfully")
         except subprocess.CalledProcessError as e:
@@ -123,7 +125,7 @@ def create_and_activate_venv():
             return False
     else:
         logger.warning("No requirements.txt found, skipping package installation")
-    
+
     # Re-run the script with the venv python
     logger.info("Restarting with virtual environment...")
     os.execv(venv_python, [venv_python] + sys.argv)
@@ -132,22 +134,21 @@ def ensure_venv():
     """Ensure we're running in the local virtual environment"""
     # First check if current Python is 3.10+
     check_python_version()
-    
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+
     venv_path = get_venv_path()
     requirements_path = os.path.join(script_dir, "requirements.txt")
-    
+
     # Determine the python executable path in the local venv
     if sys.platform == "win32":
         venv_python = os.path.join(venv_path, "Scripts", "python.exe")
     else:
         venv_python = os.path.join(venv_path, "bin", "python")
-    
+
     def install_requirements():
         if os.path.exists(requirements_path):
             logger.info("Installing/updating requirements...")
             try:
-                subprocess.run([venv_python, "-m", "pip", "install", "-r", requirements_path], 
+                subprocess.run([venv_python, "-m", "pip", "install", "-r", requirements_path],
                               capture_output=True, text=True, check=True)
                 return True
             except subprocess.CalledProcessError as e:
@@ -157,7 +158,7 @@ def ensure_venv():
         else:
             logger.warning("No requirements.txt found, skipping package installation")
             return True
-    
+
     # Check if we're already running with the correct local venv python
     if sys.executable == venv_python:
         logger.info("Already running in the local virtual environment")
@@ -166,17 +167,17 @@ def ensure_venv():
             install_requirements()
             ensure_venv._requirements_installed = True
         return
-    
+
     logger.info(f"Switching to local virtual environment at {venv_path}")
-    
+
     if os.path.exists(venv_path):
         # Venv exists, install/update requirements and activate it
         logger.info("Local virtual environment found, installing/updating requirements...")
-        
+
         # Install requirements
         if not install_requirements():
             return False
-        
+
         logger.info("Restarting with local virtual environment...")
         os.execv(venv_python, [venv_python] + sys.argv)
     else:
@@ -210,7 +211,7 @@ def main():
     """Check for updates"""
     # Ensure we're running in a virtual environment
     ensure_venv()
-    
+
     try:
         latest_version, zip_url = get_latest_release_version()
         if version_tuple(__version__) < version_tuple(latest_version):
@@ -228,7 +229,7 @@ def run_subprocess_with_output(script_name, script_path):
     logger.info(f"Starting {script_name}...")
     try:
         # Use subprocess.run instead of Popen to run in foreground
-        result = subprocess.run([sys.executable, script_path], 
+        result = subprocess.run([sys.executable, script_path],
                               check=False,  # Don't raise exception on non-zero exit
                               text=True)
         logger.info(f"{script_name} finished with exit code: {result.returncode}")
@@ -239,26 +240,28 @@ def run_subprocess_with_output(script_name, script_path):
 
 if __name__ == "__main__":
     main()
-    
+
     # Load config to check if dashboard should be enabled
     config = load_config()
     dashboard_enabled = config.get('dashboard', {}).get('enabled', True)
-    
+
     # Run bot and conditionally dashboard
     script_dir = os.path.dirname(__file__)
     bot_path = os.path.join(script_dir, "bot.py")
     dashboard_path = os.path.join(script_dir, "dashboard.py")
-    
+
     def run_bot():
+        """Run the bot process"""
         run_subprocess_with_output("bot.py", bot_path)
-    
+
     def run_dashboard():
+        """Run the dashboard process"""
         run_subprocess_with_output("dashboard.py", dashboard_path)
-    
+
     # Start bot thread
     bot_thread = threading.Thread(target=run_bot, name="BotThread")
     bot_thread.start()
-    
+
     # Start dashboard thread only if enabled
     dashboard_thread = None
     if dashboard_enabled:
@@ -267,11 +270,11 @@ if __name__ == "__main__":
         dashboard_thread.start()
     else:
         logger.info("Dashboard is disabled in config, skipping dashboard startup")
-    
+
     try:
         # Wait for bot to complete
         bot_thread.join()
-        
+
         # Wait for dashboard if it was started
         if dashboard_thread:
             dashboard_thread.join()
